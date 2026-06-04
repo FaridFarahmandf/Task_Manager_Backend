@@ -1,4 +1,5 @@
 from flask.views import MethodView
+from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint, abort
 
 from db import db
@@ -14,6 +15,7 @@ blp = Blueprint("tasks", __name__, "Operations on tasks")
 class CreatingTask(MethodView):
     @blp.arguments(TaskSchema)
     @blp.response(201, TaskSchema)
+    @jwt_required()
     def post(self, task_data, user_id): 
         enteredTitle = task_data["title"]
         enteredDescription = task_data["description"]
@@ -48,13 +50,16 @@ class CreatingTask(MethodView):
 @blp.route("/task")
 class AllTask(MethodView): 
     @blp.response(200, TaskSchema(many=True))
+    @jwt_required()
     def get(self):
         return TaskModel.query.all()
     
     
+
 @blp.route("/task/<string:task_id>")
 class Task(MethodView):
     @blp.response(200,TaskSchema)
+    @jwt_required()
     def get(self, task_id):
         task =  TaskModel.query.get_or_404(task_id)
         return task

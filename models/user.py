@@ -1,5 +1,3 @@
-from sqlalchemy.orm import load_only
-
 from db import db 
 
 class UserModel(db.Model):
@@ -12,6 +10,7 @@ class UserModel(db.Model):
     country = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False)
     password = db.Column(db.String, nullable=False)
+    selectedUser = db.Column(db.Boolean, nullable=False)
     created_tasks = db.relationship("TaskModel", back_populates='creator')
     assigned_tasks = db.relationship("TaskModel", back_populates='assigned_users', secondary='assigntask')
     

@@ -10,7 +10,7 @@ from blocklist import BLOCKLIST
 from db import db
 
 from models.user import UserModel
-from schemas.schemas import UserSchema
+from schemas.schemas import UserResponseSchema, UserSchema, UserUpdatedListSchema, UserUpdatedSchema
 from schemas.schemas import LoginUserSchema
 
 blp = Blueprint("users", __name__, description="Operations on users")
@@ -52,6 +52,7 @@ class RegisterUser(MethodView):
             role = user_data["role"],
             email = user_data["email"],
             password = pbkdf2_sha256.hash(user_data["password"]),
+            selectedUser = user_data["selectedUser"]
         )
         
         try: 
@@ -94,11 +95,48 @@ class RegisterUser(MethodView):
             db.session.commit()
             
             return {"message":"user deleted successfully"}
+        
+        @blp.arguments(UserUpdatedSchema)
+        @blp.response(200, UserUpdatedListSchema)
+        def put(self, user_data,user_id):
+            user = UserModel.query.get(user_id); 
+            if user:               
+                user.country =user_data["country"]
+                user.email= user_data["email"]
+                user.id = user_id
+                user.name = user_data["name"]
+                user.role =  user_data["role"]
+                user.selectedUser  = user_data["selectedUser"]
+                user.username = user_data["username"]
+            else:
+                user = UserModel(user_id, **user_data);
+                
+            db.session.add(user)
+            db.session.commit()
+            
+            selectedUsers = UserModel.query.filter(UserModel.selectedUser == True).all()
+            return {"user": user, "selectedUsers": selectedUsers} 
+                
+	            
+                
 
     @blp.route("/users")
     class Users(MethodView):
-        @blp.response(200, UserSchema(many=True))
+        @blp.response(200, UserResponseSchema)
         def get(self):
-            print("helloo")
-            users = UserModel.query.all()
-            return users
+            users = UserModel.query.all()    
+            usersSelected = UserModel.query.filter(
+        UserModel.selectedUser == True
+        ).all()
+            print(usersSelected)
+            return {"users":users, "selectedUsers":usersSelected}
+        
+    @blp.route("/users/selected")
+    class UserSelected(MethodView):
+        @blp.response(200, UserSchema(many=True))
+        def get(self): 
+            users = UserModel.query.filter((UserModel.selectedUser == True)).all();
+            return users;
+        
+    
+            

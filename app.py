@@ -7,6 +7,7 @@ from flask import Flask, jsonify
 from flask_smorest import Api
 from flask_jwt_extended import JWTManager
 from blocklist import BLOCKLIST
+from flask_migrate import Migrate, migrate
 
 from db import db
 
@@ -30,6 +31,7 @@ def create_app(data_url=None): #data_url=None lets you pass a different database
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
     db.init_app(app) #connect SQLAlchemy to Flask.
+    migrate = Migrate(app,db)
     api = Api(app) #enable Flask-Smorest routes and Swagger
     
     app.config["JWT_SECRET_KEY"] = "14350677282592166677008582084652283861"
@@ -92,7 +94,7 @@ def create_app(data_url=None): #data_url=None lets you pass a different database
     api.register_blueprint(UserBlueprint)
     api.register_blueprint(TaskBluePrint)
     
-    with app.app_context():
-        db.create_all()
+    # with app.app_context():
+    #     db.create_all()
         
     return app
